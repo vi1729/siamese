@@ -60,8 +60,7 @@ def unet_model(img_shape, path_to_weights=None, n_dims=1):
     conv2d_18 = Conv2D(32, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(conv2d_17)
     conv2d_19 = Conv2D(1, (1, 1), activation='sigmoid', padding='same', kernel_initializer='he_normal')(conv2d_18)
     model = Model(in_layer, conv2d_19)
-    print('path_to_weights')
-    print(path_to_weights)
+
     if path_to_weights is not None:
         model.load_weights(path_to_weights)
 
@@ -72,7 +71,7 @@ def unet_model(img_shape, path_to_weights=None, n_dims=1):
 def get_img_lbl_net(img_path, new_h, new_w, lbl_path=None):
 
     if type(img_path) == str:
-        img = cv2.imread(img_path, cv2.IMREAD_ANYDEPTH)
+        img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     else:
         img = img_path
     # take ln of image
@@ -109,7 +108,7 @@ def get_img_lbl_net(img_path, new_h, new_w, lbl_path=None):
     img_back = np.abs(img_back)
 
     # apply exp to reverse the earlier log
-    img = np.exp(img_back, dtype=np.float64)
+    img_exp = np.exp(img_back, dtype=np.float64)
 
     # def _histeq(im, nbr_bins=256):
     #     imhist, bins = np.histogram(im.flatten(), nbr_bins, normed=True)
@@ -128,7 +127,7 @@ def get_img_lbl_net(img_path, new_h, new_w, lbl_path=None):
     #
     # img_log = np.log(img + (1.1-np.min(img)))
     # img, _ = _histeq(img_log)
-    img = img_back / np.max(img_back)
+    img = img_exp / np.max(img_exp)
     img = (img - np.mean(img)) / np.std(img)
     img_net = np.zeros((1, new_h, new_w, 1), dtype=np.float32) + np.min(img)
     img_net[0, :img.shape[0], :img.shape[1], 0] = img
