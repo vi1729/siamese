@@ -109,7 +109,7 @@ def get_img_lbl_net(img_path, new_h, new_w, lbl_path=None):
     img_back = np.abs(img_back)
 
     # apply exp to reverse the earlier log
-    # img = np.exp(img_back, dtype=np.float64)
+    img = np.exp(img_back, dtype=np.float64)
 
     # def _histeq(im, nbr_bins=256):
     #     imhist, bins = np.histogram(im.flatten(), nbr_bins, normed=True)
@@ -149,7 +149,7 @@ def get_segmentation(input_img, model):
     img_net, _ = get_img_lbl_net(input_img, new_h, new_w)
 
     prediction = model.predict(img_net, batch_size=1)
-    pred = prediction[0, :img_shape[0], :img_shape[1], 0] >= 0.5
+    pred = prediction[0, :img_shape[0], :img_shape[1], 0] >= 0.6
     return pred
 
 
