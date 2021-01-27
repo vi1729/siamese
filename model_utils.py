@@ -21,7 +21,7 @@ def unet_model(img_shape, path_to_weights=None, n_dims=1):
     in_layer = Input(shape=(img_shape[0], img_shape[1], n_dims))
     conv2d_1 = Conv2D(32, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(in_layer)
     conv2d_2 = Conv2D(32, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(conv2d_1)
-    drop1 = Dropout(0.5)(conv2d_2)
+    drop1 = Dropout(0.3)(conv2d_2)
     maxpool_1 = MaxPooling2D((2, 2), padding='same')(drop1)
     conv2d_3 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(maxpool_1)
     conv2d_4 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(conv2d_3)
@@ -31,12 +31,12 @@ def unet_model(img_shape, path_to_weights=None, n_dims=1):
     maxpool_3 = MaxPooling2D((2, 2), padding='same')(conv2d_6)
     conv2d_7 = Conv2D(256, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(maxpool_3)
     conv2d_8 = Conv2D(256, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(conv2d_7)
-    drop2 = Dropout(0.5)(conv2d_8)
+    drop2 = Dropout(0.3)(conv2d_8)
     maxpool_4 = MaxPooling2D((2, 2), padding='same')(drop2)
 
     conv2d_9 = Conv2D(512, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(maxpool_4)
     conv2d_10 = Conv2D(512, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(conv2d_9)
-    drop3 = Dropout(0.5)(conv2d_10)
+    drop3 = Dropout(0.3)(conv2d_10)
 
     upsample_1 = UpSampling2D((2, 2), interpolation='bilinear')(drop3)
     concat_1 = Concatenate(axis=3)([upsample_1, drop2])
@@ -70,64 +70,64 @@ def unet_model(img_shape, path_to_weights=None, n_dims=1):
 
 def get_img_lbl_net(img_path, new_h, new_w, lbl_path=None):
 
+#     if type(img_path) == str:
+#         img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+#     else:
+#         img = img_path
+#     # take ln of image
+#     img_log = np.log(np.float64(img), dtype=np.float64)
+
+#     # do dft saving as complex output
+#     dft = np.fft.fft2(img_log, axes=(0, 1))
+
+#     # apply shift of origin to center of image
+#     dft_shift = np.fft.fftshift(dft)
+
+#     # create black circle on white background for high pass filter
+#     radius = 5
+#     mask = np.zeros_like(img, dtype=np.float64)
+#     cy = mask.shape[0]
+#     cx = mask.shape[1]
+#     cv2.circle(mask, (cx, cy), radius, 1, -1)
+#     mask = 1 - mask
+
+#     # antialias mask via blurring
+#     mask = cv2.GaussianBlur(mask, (7, 7), 0)
+#     # mask = cv2.GaussianBlur(mask, (47,47), 0)
+
+#     # apply mask to dft_shift
+#     dft_shift_filtered = np.multiply(dft_shift, mask)
+
+#     # shift origin from center to upper left corner
+#     back_ishift = np.fft.ifftshift(dft_shift_filtered)
+
+#     # do idft saving as complex
+#     img_back = np.fft.ifft2(back_ishift, axes=(0, 1))
+
+#     # combine complex real and imaginary components to form (the magnitude for) the original image again
+#     img_back = np.abs(img_back)
+
+#     # apply exp to reverse the earlier log
+#     img_exp = np.exp(img_back, dtype=np.float64)
+
+    def _histeq(im, nbr_bins=256):
+        imhist, bins = np.histogram(im.flatten(), nbr_bins, normed=True)
+        cdf = imhist.cumsum()  # cumulative distribution function
+        cdf = 255 * cdf / cdf[-1]  # normalize
+    
+        # use linear interpolation of cdf to fnp.log(img+1)ind new pixel values
+        im2 = np.interp(im.flatten(), bins[:-1], cdf)
+    
+        return im2.reshape(im.shape), cdf
+    
     if type(img_path) == str:
-        img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+        img = cv2.imread(img_path, cv2.IMREAD_ANYDEPTH)
     else:
         img = img_path
-    # take ln of image
-    img_log = np.log(np.float64(img), dtype=np.float64)
-
-    # do dft saving as complex output
-    dft = np.fft.fft2(img_log, axes=(0, 1))
-
-    # apply shift of origin to center of image
-    dft_shift = np.fft.fftshift(dft)
-
-    # create black circle on white background for high pass filter
-    radius = 5
-    mask = np.zeros_like(img, dtype=np.float64)
-    cy = mask.shape[0]
-    cx = mask.shape[1]
-    cv2.circle(mask, (cx, cy), radius, 1, -1)
-    mask = 1 - mask
-
-    # antialias mask via blurring
-    mask = cv2.GaussianBlur(mask, (7, 7), 0)
-    # mask = cv2.GaussianBlur(mask, (47,47), 0)
-
-    # apply mask to dft_shift
-    dft_shift_filtered = np.multiply(dft_shift, mask)
-
-    # shift origin from center to upper left corner
-    back_ishift = np.fft.ifftshift(dft_shift_filtered)
-
-    # do idft saving as complex
-    img_back = np.fft.ifft2(back_ishift, axes=(0, 1))
-
-    # combine complex real and imaginary components to form (the magnitude for) the original image again
-    img_back = np.abs(img_back)
-
-    # apply exp to reverse the earlier log
-    img_exp = np.exp(img_back, dtype=np.float64)
-
-    # def _histeq(im, nbr_bins=256):
-    #     imhist, bins = np.histogram(im.flatten(), nbr_bins, normed=True)
-    #     cdf = imhist.cumsum()  # cumulative distribution function
-    #     cdf = 255 * cdf / cdf[-1]  # normalize
-    #
-    #     # use linear interpolation of cdf to fnp.log(img+1)ind new pixel values
-    #     im2 = np.interp(im.flatten(), bins[:-1], cdf)
-    #
-    #     return im2.reshape(im.shape), cdf
-    #
-    # if type(img_path) == str:
-    #     img = cv2.imread(img_path, cv2.IMREAD_ANYDEPTH)
-    # else:
-    #     img = img_path
-    #
-    # img_log = np.log(img + (1.1-np.min(img)))
-    # img, _ = _histeq(img_log)
-    img = img_exp / np.max(img_exp)
+    
+    img_log = np.log(img + (1.1-np.min(img)))
+    img, _ = _histeq(img_log)
+    img = img / np.max(img)
     img = (img - np.mean(img)) / np.std(img)
     img_net = np.zeros((1, new_h, new_w, 1), dtype=np.float32) + np.min(img)
     img_net[0, :img.shape[0], :img.shape[1], 0] = img
