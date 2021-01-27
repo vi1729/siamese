@@ -21,7 +21,7 @@ def unet_model(img_shape, path_to_weights=None, n_dims=1):
     in_layer = Input(shape=(img_shape[0], img_shape[1], n_dims))
     conv2d_1 = Conv2D(32, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(in_layer)
     conv2d_2 = Conv2D(32, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(conv2d_1)
-    drop1 = Dropout(0.3)(conv2d_2)
+    drop1 = Dropout(0.5)(conv2d_2)
     maxpool_1 = MaxPooling2D((2, 2), padding='same')(drop1)
     conv2d_3 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(maxpool_1)
     conv2d_4 = Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(conv2d_3)
@@ -31,12 +31,12 @@ def unet_model(img_shape, path_to_weights=None, n_dims=1):
     maxpool_3 = MaxPooling2D((2, 2), padding='same')(conv2d_6)
     conv2d_7 = Conv2D(256, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(maxpool_3)
     conv2d_8 = Conv2D(256, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(conv2d_7)
-    drop2 = Dropout(0.3)(conv2d_8)
+    drop2 = Dropout(0.5)(conv2d_8)
     maxpool_4 = MaxPooling2D((2, 2), padding='same')(drop2)
 
     conv2d_9 = Conv2D(512, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(maxpool_4)
     conv2d_10 = Conv2D(512, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal')(conv2d_9)
-    drop3 = Dropout(0.3)(conv2d_10)
+    drop3 = Dropout(0.5)(conv2d_10)
 
     upsample_1 = UpSampling2D((2, 2), interpolation='bilinear')(drop3)
     concat_1 = Concatenate(axis=3)([upsample_1, drop2])
